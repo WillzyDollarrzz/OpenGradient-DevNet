@@ -12,7 +12,7 @@ In this guide, we're using Linux based Terminal (Ubuntu, WSL) <br/>
   - If you've done that, Paste this in your terminal:
     
 ```bash
-wget -q https://raw.githubusercontent.com/WillzyDollarrzz/OpenGradient-DevNet/refs/heads/main/opengradient.sh && chmod +x opengradient.sh && ./opengradient.sh
+mkdir opengradient && cd opengradient && wget -q https://raw.githubusercontent.com/WillzyDollarrzz/OpenGradient-DevNet/refs/heads/main/opengradient.sh && chmod +x opengradient.sh && ./opengradient.sh
 ```
 When creating a hardhat project, which you'll see,
 - press `enter` then `enter` again, then type `y`
