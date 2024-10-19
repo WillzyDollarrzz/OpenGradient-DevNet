@@ -1,6 +1,7 @@
 #!/bin/bash
 
 echo "Installing dependencies..."
+sudo apt update && sudo apt upgrade
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  
@@ -9,10 +10,10 @@ nvm use 18
 npm install -g hardhat
 npm install --save-dev hardhat
 npm install --save-dev @nomicfoundation/hardhat-toolbox
-npm install --save-dev ethers @nomiclabs/hardhat-ethers
+npm uninstall ethers
+npm install --save-dev ethers@latest @nomiclabs/hardhat-ethers
 npm i opengradient-neuroml dotenv
 npm install
-
 
 if [ ! -d "contracts" ]; then
   echo "Initializing Hardhat project..."
@@ -25,7 +26,7 @@ ENV_FILE=".env"
 PREDEFINED_RPC_URL="http://18.218.115.248:8545"  
 
 if [ ! -f "$ENV_FILE" ]; then
-  echo "Please provide your private key:"
+  echo "Please paste your private key:"
   read -s PRIVATE_KEY
 
   echo "Saving private key to .env file..."
@@ -38,7 +39,6 @@ EOL
 else
   echo ".env file already exists."
 fi
-
 
 CONFIG_FILE="hardhat.config.js"
 echo "Updating hardhat.config.js..."
@@ -58,7 +58,6 @@ module.exports = {
   },
 };
 EOL
-
 
 CONTRACT_FILE="contracts/Test.sol"
 if [ ! -f "$CONTRACT_FILE" ]; then
@@ -163,30 +162,26 @@ contract Test {
 EOL
 fi
 
-
 DEPLOY_SCRIPT="scripts/deploy.js"
 if [ ! -f "$DEPLOY_SCRIPT" ]; then
   echo "Creating deploy script..."
   mkdir -p scripts
-  cat > $DEPLOY_SCRIPT <<EOL
-    const hre = require("hardhat");
+  cat > $DEPLOY_SCRIPT <<'EOL'
+  const hre = require("hardhat");
 
 async function main() {
+    
     const ContractFactory = await hre.ethers.getContractFactory("Test");
     console.log("Deploying contract...");
+
     const contract = await ContractFactory.deploy();
-    const receipt = await contract.deployTransaction.wait();
+    await contract.waitForDeployment(); 
 
-    if (receipt.logs !== null) {
-        console.log("Logs found:", receipt.logs);
-    } else {
-        console.log("No logs in the transaction.");
-    }
-
-    const contractAddress = contract.address;
-    const txHash = contract.deployTransaction.hash;
+    const contractAddress = contract.target; 
+    const txHash = contract.deploymentTransaction().hash; 
     console.log("Contract deployed to:", contractAddress);
-    const explorerUrl = \`http://3.145.62.2/tx/\${txHash}\`;
+    
+    const explorerUrl = `http://3.145.62.2/tx/${txHash}`;
     console.log("Transaction link:", explorerUrl);
 }
 
@@ -194,13 +189,13 @@ main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });
+
 EOL
 fi
 
 echo "Compiling the contract..."
 npx hardhat compile
 
-echo "Deploying contract..."
 npx hardhat run scripts/deploy.js --network opengradient
 
 echo "For more guides like this, follow @WillzyDollarrzz on X"
